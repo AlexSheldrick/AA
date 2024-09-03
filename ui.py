@@ -140,43 +140,46 @@ if not st.session_state["all_tickets_df"].empty:
     current_ticket_df = st.session_state["all_tickets_df"].iloc[
         [st.session_state["current_index"]]
     ]
-    st.dataframe(current_ticket_df)
+    st.dataframe(current_ticket_df, use_container_width=True)
 
     # AI Suggestion
-    if st.button("Get AI Suggestion"):
-        with st.spinner("Fetching AI Suggestion..."):
-            try:
-                response = requests.post(
-                    f"{FASTAPI_URL}/ai-suggestion",
-                    json=st.session_state["current_ticket"],
-                    timeout=TIMEOUT,
-                )
-                if response.status_code == 200:
-                    suggestion_data = response.json()
-                    st.session_state["ai_suggestion"] = suggestion_data[
-                        "suggestion"
-                    ]
-                    st.session_state["similar_tickets_df"] = pd.DataFrame(
-                        suggestion_data["similar_tickets"]
-                    )
-                else:
-                    st.error(f"Failed to get AI suggestion: {response.text}")
-            except requests.RequestException as e:
-                st.error(f"Error getting AI suggestion: {str(e)}")
-
-    if st.session_state["ai_suggestion"]:
-        st.subheader("AI Suggestion")
-        st.write(st.session_state["ai_suggestion"])
-
-    if not st.session_state["similar_tickets_df"].empty:
-        st.subheader("Similar Tickets")
-        st.dataframe(st.session_state["similar_tickets_df"])
-
-    # Ticket Resolution
-    st.subheader("Resolve Ticket")
-
     def create_resolution_form():
         with st.form("resolution_form", clear_on_submit=True):
+            if st.form_submit_button("Get AI Suggestion"):
+                with st.spinner("Fetching AI Suggestion..."):
+                    try:
+                        response = requests.post(
+                            f"{FASTAPI_URL}/ai-suggestion",
+                            json=st.session_state["current_ticket"],
+                            timeout=TIMEOUT,
+                        )
+                        if response.status_code == 200:
+                            suggestion_data = response.json()
+                            st.session_state["ai_suggestion"] = suggestion_data[
+                                "suggestion"
+                            ]
+                            st.session_state["similar_tickets_df"] = (
+                                pd.DataFrame(suggestion_data["similar_tickets"])
+                            )
+                        else:
+                            st.error(
+                                f"Failed to get AI suggestion: {response.text}"
+                            )
+                    except requests.RequestException as e:
+                        st.error(f"Error getting AI suggestion: {str(e)}")
+                st.rerun()
+
+            if st.session_state["ai_suggestion"]:
+                st.subheader("AI Suggestion")
+                st.write(st.session_state["ai_suggestion"])
+
+            if not st.session_state["similar_tickets_df"].empty:
+                st.subheader("Similar Tickets")
+                st.dataframe(
+                    st.session_state["similar_tickets_df"],
+                    use_container_width=True,
+                )
+
             resolution = st.text_area("Resolution")
             ai_helpful = st.checkbox("Was the AI suggestion helpful?")
             feedback = st.text_area("Feedback on AI suggestion")
@@ -206,7 +209,9 @@ if not st.session_state["all_tickets_df"].empty:
                             if st.session_state["current_index"] > 0:
                                 st.session_state["current_index"] -= 1
                             # Fetch the new current ticket
-                            fetch_ticket_by_idx(st.session_state["current_index"])
+                            fetch_ticket_by_idx(
+                                st.session_state["current_index"]
+                            )
                             # Reset AI suggestion and similar tickets
                             st.session_state["ai_suggestion"] = None
                             st.session_state["similar_tickets_df"] = (
@@ -227,4 +232,4 @@ if not st.session_state["all_tickets_df"].empty:
 
 # Display resolved tickets
 st.header("Resolved Tickets")
-st.dataframe(st.session_state["resolved_tickets_df"])
+st.dataframe(st.session_state["resolved_tickets_df"], use_container_width=True)
