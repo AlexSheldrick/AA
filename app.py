@@ -136,17 +136,19 @@ def get_all_tickets():
         ) from all_tickets_err
 
 
-@app.get("/ticket/{ticket_id}", response_model=ticket_manager.Ticket)
-def get_ticket(ticket_id: str):
-    """Fetch a specific ticket by ID."""
+@app.get("/ticket/{ticket_idx}", response_model=ticket_manager.Ticket)
+def get_ticket(ticket_idx: int):
+    """Fetch a specific ticket by index."""
     try:
-        ticket = NewTicketManager.get_ticket_by_id(ticket_id)
+        ticket = NewTicketManager.fetch_ticket_by_idx(ticket_idx)
         if ticket:
             return ticket
         else:
             raise HTTPException(status_code=404, detail="Ticket not found")
     except Exception as ticket_err:
-        logger.error("Error fetching ticket %s: %s", ticket_id, ticket_err)
+        logger.error(
+            "Error fetching ticket at index %s: %s", ticket_idx, ticket_err
+        )
         raise HTTPException(
             status_code=500, detail="Failed to fetch ticket"
         ) from ticket_err
@@ -177,7 +179,7 @@ def get_ai_suggestion(ticket: ticket_manager.Ticket):
 
 @app.post("/resolve-ticket")
 def resolve_ticket(
-    ticket_id: str,
+    ticket_idx: int,
     resolve_input: ResolveTicketInput,
     background_tasks: BackgroundTasks,
     service: TicketService = Depends(get_ticket_service),
@@ -185,7 +187,7 @@ def resolve_ticket(
     """Resolve a ticket and update the resolved tickets list."""
     try:
         resolved_ticket = NewTicketManager.resolve_ticket(
-            ticket_id,
+            ticket_idx,
             resolution=resolve_input.resolution,
             agent_name="Alex Sheldrick",
             ai_suggestion_helpful=resolve_input.ai_suggestion_helpful,
@@ -193,7 +195,7 @@ def resolve_ticket(
         )
 
         if resolved_ticket:
-            resolved_ticket_dict = resolved_ticket.dict()
+            resolved_ticket_dict = resolved_ticket.model_dump()
 
             resolved_ticket_dict[COLUMN_RESOLVED] = True
             resolved_ticket_dict["ai_suggestion_helpful"] = bool(
@@ -213,9 +215,7 @@ def resolve_ticket(
 
             background_tasks.add_task(service.save_to_csv)
 
-            NewTicketManager.tickets_df = NewTicketManager.tickets_df[
-                NewTicketManager.tickets_df[COLUMN_TICKET_ID] != ticket_id
-            ]
+            NewTicketManager.drop_ticket_by_idx(ticket_idx)
 
             NewTicketManager.tickets_df[COLUMN_RESOLVED] = (
                 NewTicketManager.tickets_df[COLUMN_RESOLVED]
@@ -231,7 +231,9 @@ def resolve_ticket(
             raise HTTPException(status_code=404, detail="Ticket not found")
 
     except Exception as resolve_err:
-        logger.error("Error resolving ticket %s: %s", ticket_id, resolve_err)
+        logger.error(
+            "Error resolving ticket at index %s: %s", ticket_idx, resolve_err
+        )
         raise HTTPException(
             status_code=500, detail="Failed to resolve ticket"
         ) from resolve_err

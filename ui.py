@@ -80,11 +80,20 @@ def fetch_resolved_tickets():
         )  # type: ignore
 
 
-def fetch_ticket_by_id(ticket_id):
-    """Fetch a specific ticket by ID and update the session state."""
-    ticket = fetch_data_from_api(f"ticket/{ticket_id}")
+def fetch_ticket_by_idx(idx):
+    """Fetch a specific ticket by index and update the session state."""
+    ticket = fetch_data_from_api(f"ticket/{idx}")
     if ticket is not None:
         st.session_state["current_ticket"] = ticket
+
+
+def reset_form_fields():
+    if "resolution" in st.session_state:
+        del st.session_state.resolution
+    if "ai_helpful" in st.session_state:
+        del st.session_state.ai_helpful
+    if "feedback" in st.session_state:
+        del st.session_state.feedback
 
 
 # Fetch all tickets and resolved tickets at the start of the session
@@ -96,8 +105,7 @@ if (
     st.session_state["current_ticket"] is None
     and len(st.session_state["all_tickets_df"]) > 0
 ):
-    first_ticket_id = st.session_state["all_tickets_df"].iloc[0]["ticket_id"]
-    fetch_ticket_by_id(first_ticket_id)
+    fetch_ticket_by_idx(st.session_state["current_index"])
 
 st.title("IT Helpdesk Ticket Resolution System")
 
@@ -107,10 +115,7 @@ col1, col2, col3 = st.columns([1, 3, 1])
 with col1:
     if st.button("←") and st.session_state["current_index"] > 0:
         st.session_state["current_index"] -= 1
-        current_ticket_id = st.session_state["all_tickets_df"].iloc[
-            st.session_state["current_index"]
-        ]["ticket_id"]
-        fetch_ticket_by_id(current_ticket_id)
+        fetch_ticket_by_idx(st.session_state["current_index"])
 
 with col3:
     if (
@@ -119,21 +124,23 @@ with col3:
         < len(st.session_state["all_tickets_df"]) - 1
     ):
         st.session_state["current_index"] += 1
-        current_ticket_id = st.session_state["all_tickets_df"].iloc[
-            st.session_state["current_index"]
-        ]["ticket_id"]
-        fetch_ticket_by_id(current_ticket_id)
+        fetch_ticket_by_idx(st.session_state["current_index"])
 
 with col2:
     st.write(
         f"Ticket {st.session_state['current_index'] + 1} of "
         f"{len(st.session_state['all_tickets_df'])}"
+        if not st.session_state["all_tickets_df"].empty
+        else "All done for Today!"
     )
 
 # Display current ticket as a Pandas DataFrame
-if st.session_state["current_ticket"]:
+if not st.session_state["all_tickets_df"].empty:
     st.header("Current Ticket")
-    st.dataframe(pd.DataFrame([st.session_state["current_ticket"]]))
+    current_ticket_df = st.session_state["all_tickets_df"].iloc[
+        [st.session_state["current_index"]]
+    ]
+    st.dataframe(current_ticket_df)
 
     # AI Suggestion
     if st.button("Get AI Suggestion"):
@@ -167,35 +174,55 @@ if st.session_state["current_ticket"]:
 
     # Ticket Resolution
     st.subheader("Resolve Ticket")
-    resolution = st.text_area("Resolution")
-    ai_helpful = st.checkbox("Was the AI suggestion helpful?")
-    feedback = st.text_area("Feedback on AI suggestion")
 
-    if st.button("Resolve Ticket"):
-        with st.spinner("Resolving ticket..."):
-            resolve_data = {
-                "resolution": resolution,
-                "ai_suggestion_helpful": ai_helpful,
-                "feedback": feedback,
-            }
-            try:
-                response = requests.post(
-                    f"{FASTAPI_URL}/resolve-ticket",
-                    params={
-                        "ticket_id": st.session_state["current_ticket"][
-                            "ticket_id"
-                        ]
-                    },
-                    json=resolve_data,
-                    timeout=TIMEOUT,
-                )
-                if response.status_code == 200:
-                    st.success("Ticket resolved successfully!")
-                    fetch_resolved_tickets()
-                else:
-                    st.error(f"Failed to resolve ticket: {response.text}")
-            except requests.RequestException as e:
-                st.error(f"Error resolving ticket: {str(e)}")
+    def create_resolution_form():
+        with st.form("resolution_form", clear_on_submit=True):
+            resolution = st.text_area("Resolution")
+            ai_helpful = st.checkbox("Was the AI suggestion helpful?")
+            feedback = st.text_area("Feedback on AI suggestion")
+            submit = st.form_submit_button("Resolve Ticket")
+
+            if submit:
+                with st.spinner("Resolving ticket..."):
+                    resolve_data = {
+                        "resolution": resolution,
+                        "ai_suggestion_helpful": ai_helpful,
+                        "feedback": feedback,
+                    }
+                    try:
+                        response = requests.post(
+                            f"{FASTAPI_URL}/resolve-ticket",
+                            params={
+                                "ticket_idx": st.session_state["current_index"]
+                            },
+                            json=resolve_data,
+                            timeout=TIMEOUT,
+                        )
+                        if response.status_code == 200:
+                            st.success("Ticket resolved successfully!")
+                            fetch_resolved_tickets()
+                            fetch_all_tickets()  # Refresh the all_tickets_df
+                            # Decrement the current index if it's not the first ticket
+                            if st.session_state["current_index"] > 0:
+                                st.session_state["current_index"] -= 1
+                            # Fetch the new current ticket
+                            fetch_ticket_by_idx(st.session_state["current_index"])
+                            # Reset AI suggestion and similar tickets
+                            st.session_state["ai_suggestion"] = None
+                            st.session_state["similar_tickets_df"] = (
+                                pd.DataFrame()
+                            )
+                            return True
+                        else:
+                            st.error(
+                                f"Failed to resolve ticket: {response.text}"
+                            )
+                    except requests.RequestException as e:
+                        st.error(f"Error resolving ticket: {str(e)}")
+        return False
+
+    if create_resolution_form():
+        st.rerun()
 
 
 # Display resolved tickets

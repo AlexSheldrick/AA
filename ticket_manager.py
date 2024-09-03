@@ -38,24 +38,35 @@ class TicketManager:
         self.current_index = 0
 
     def fetch_current_ticket(self) -> Optional[Ticket]:
+        """
+        Fetches the current ticket.
+
+        :return: A Ticket object if found, otherwise None.
+        """
         if 0 <= self.current_index < len(self.tickets_df):
             ticket_data = self.tickets_df.iloc[self.current_index].to_dict()
             return Ticket(**ticket_data)
         return None
 
-    def fetch_next_ticket(self) -> Optional[Ticket]:
+    def drop_current_ticket(self):
         """
-        Fetches the next ticket from the DataFrame.
+        Drops the current ticket from the DataFrame.
+        """
+        if 0 <= self.current_index < len(self.tickets_df):
+            self.tickets_df = self.tickets_df.drop(self.current_index)
+            self.tickets_df = self.tickets_df.reset_index(drop=True)
+            self.current_index -= 1
 
-        :return: A Ticket object containing the ticket data or None if no
-        tickets are left.
+    def drop_ticket_by_id(self, ticket_id: str):
         """
-        if self.current_index < len(self.tickets_df):
-            ticket_data = self.tickets_df.iloc[self.current_index].to_dict()
-            self.current_index += 1
-            return Ticket(**ticket_data)
-        else:
-            return None
+        Drops a ticket by its ID.
+
+        :param ticket_id: The ID of the ticket to drop.
+        """
+        self.tickets_df = self.tickets_df[
+            self.tickets_df["ticket_id"] != ticket_id
+        ]
+        self.tickets_df = self.tickets_df.reset_index(drop=True)
 
     def get_ticket_by_id(self, ticket_id: str) -> Optional[Ticket]:
         """
@@ -83,9 +94,31 @@ class TicketManager:
             [self.tickets_df, new_ticket_df], ignore_index=True
         )
 
+    def fetch_ticket_by_idx(self, idx: int) -> Optional[Ticket]:
+        """
+        Retrieves a ticket by its index.
+
+        :param idx: The index of the ticket to retrieve.
+        :return: A Ticket object if found, otherwise None.
+        """
+        if 0 <= idx < len(self.tickets_df):
+            ticket_data = self.tickets_df.iloc[idx].to_dict()
+            return Ticket(**ticket_data)
+        return None
+
+    def drop_ticket_by_idx(self, idx: int):
+        """
+        Drops a ticket by its index.
+
+        :param idx: The index of the ticket to drop.
+        """
+        if 0 <= idx < len(self.tickets_df):
+            self.tickets_df = self.tickets_df.drop(idx)
+            self.tickets_df = self.tickets_df.reset_index(drop=True)
+
     def resolve_ticket(
         self,
-        ticket_id: str,
+        idx: int,
         resolution: str,
         agent_name: str,
         ai_suggestion_helpful: bool,
@@ -94,18 +127,14 @@ class TicketManager:
         """
         Marks a ticket as resolved and updates the resolution details.
 
-        :param ticket_id: The ID of the ticket to resolve.
+        :param idx: The index of the ticket to resolve.
         :param resolution: The resolution details.
         :param agent_name: The name of the agent resolving the ticket.
         :param ai_suggestion_helpful: Whether the AI suggestion was helpful.
         :param feedback: Optional feedback from the agent.
         :return: The resolved Ticket object if successful, otherwise None.
         """
-        ticket_index = self.tickets_df.index[
-            self.tickets_df["ticket_id"] == ticket_id
-        ].tolist()
-        if ticket_index:
-            idx = ticket_index[0]
+        if 0 <= idx < len(self.tickets_df):
             self.tickets_df.at[idx, "resolution"] = resolution
             self.tickets_df.at[idx, "resolved"] = True
             self.tickets_df.at[idx, "agent_name"] = agent_name
@@ -117,8 +146,7 @@ class TicketManager:
             )
 
             return Ticket(**self.tickets_df.iloc[idx].to_dict())
-        else:
-            return None
+        return None
 
     def get_all_tickets(self) -> list[Ticket]:
         """
@@ -142,5 +170,7 @@ if __name__ == "__main__":
     Tickets_Df = data_loader.load_data()
 
     ticket_manager = TicketManager(Tickets_Df)
-    new_ticket = ticket_manager.fetch_next_ticket()
+    new_ticket = ticket_manager.fetch_current_ticket()
     print(new_ticket)
+    ticket_manager.current_index = 1
+    print(ticket_manager.fetch_current_ticket())
