@@ -7,7 +7,7 @@ import os
 import pandas as pd
 import openai
 
-import aleph_alpha_client  # Client, CompletionRequest, Prompt
+import aleph_alpha_client
 
 
 class AISuggestionEngine:
@@ -108,10 +108,11 @@ class AISuggestionEngine:
         Builds a prompt for the LLM based on similar tickets and the new
         ticket.
         """
-        prompt = "### Instruction:\n Find a solution to these IT issues\n"
+        prompt = "### Instruction:\n Find a solution to this IT issue\n"
         prompt += f"Issue: {new_ticket['issue']}\n"
         prompt += f"Description: {new_ticket['description']}\n\n"
-        prompt += "The following are similar tickets and their resolutions:\n"
+        prompt += "### Input: The following are similar tickets and their "
+        prompt += "resolutions:\n Use them to inform your response.\n\n"
 
         for _, row in similar_tickets.iterrows():
             prompt += f"<Ticket ID: {row['ticket_id']}>\n"
@@ -175,7 +176,6 @@ if __name__ == "__main__":
     import ticket_manager
     import similarity
 
-    # Initialize the DataLoader and other components
     NEW_TICKET_PATH = os.path.join("data", "new_tickets.csv")
     OLD_TICKETS_PATHS = [
         os.path.join("data", "old_tickets", "ticket_dump_1.csv"),
@@ -183,7 +183,6 @@ if __name__ == "__main__":
         os.path.join("data", "old_tickets", "ticket_dump_3.json"),
     ]
 
-    # Load ticket data using the DataLoader
     new_ticket_loader = data_loader.DataLoader([NEW_TICKET_PATH])
     old_ticket_loader = data_loader.DataLoader(OLD_TICKETS_PATHS)
 
@@ -194,7 +193,6 @@ if __name__ == "__main__":
         old_ticket_loader.load_data()
     )
 
-    # Initialize engines
     similarity_engine = similarity.SimilarityEngine(
         OldTicketsManager.tickets_df
     )

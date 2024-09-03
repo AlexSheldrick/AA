@@ -1,7 +1,7 @@
 """ Similarity Engine for finding similar tickets."""
 
 import pandas as pd
-from sklearn import feature_extraction  # type ignore
+from sklearn import feature_extraction
 from sklearn import metrics
 
 

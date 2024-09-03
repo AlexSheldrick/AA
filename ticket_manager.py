@@ -15,7 +15,7 @@ class Ticket(pydantic.BaseModel):
     ticket_id: str
     issue: str
     description: str
-    resolved: bool = False  # Provide a default value for resolved
+    resolved: bool = False
 
     class Config:
         """Pydantic configuration."""
@@ -36,6 +36,12 @@ class TicketManager:
         """
         self.tickets_df = tickets_df
         self.current_index = 0
+
+    def fetch_current_ticket(self) -> Optional[Ticket]:
+        if 0 <= self.current_index < len(self.tickets_df):
+            ticket_data = self.tickets_df.iloc[self.current_index].to_dict()
+            return Ticket(**ticket_data)
+        return None
 
     def fetch_next_ticket(self) -> Optional[Ticket]:
         """
@@ -72,7 +78,7 @@ class TicketManager:
 
         :param ticket: The Ticket object to be added.
         """
-        new_ticket_df = pd.DataFrame([ticket.dict()])
+        new_ticket_df = pd.DataFrame([ticket.model_dump()])
         self.tickets_df = pd.concat(
             [self.tickets_df, new_ticket_df], ignore_index=True
         )
