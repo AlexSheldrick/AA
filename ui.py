@@ -7,7 +7,7 @@ import requests
 import pandas as pd
 
 # FastAPI server URL
-FASTAPI_URL = "http://127.0.0.1:8000"
+FASTAPI_URL = st.secrets["FASTAPI_URL"]  # "http://127.0.0.1:8000"
 TIMEOUT = 180
 
 # Initialize session state
