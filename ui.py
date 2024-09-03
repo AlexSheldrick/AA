@@ -80,7 +80,7 @@ def fetch_resolved_tickets():
         )  # type: ignore
 
 
-def fetch_ticket_by_idx(idx):
+def fetch_ticket_by_idx(idx: int):
     """Fetch a specific ticket by index and update the session state."""
     ticket = fetch_data_from_api(f"ticket/{idx}")
     if ticket is not None:
@@ -175,9 +175,9 @@ if not st.session_state["all_tickets_df"].empty:
             resolution = st.text_area("Resolution")
             ai_helpful = st.checkbox("Was the AI suggestion helpful?")
             feedback = st.text_area("Feedback on AI suggestion")
-            submit = st.form_submit_button("Resolve Ticket")
+            submit_resolution = st.form_submit_button("Resolve Ticket")
 
-            if submit:
+            if submit_resolution:
                 with st.spinner("Resolving ticket..."):
                     resolve_data = {
                         "resolution": resolution,
