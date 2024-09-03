@@ -87,15 +87,6 @@ def fetch_ticket_by_idx(idx):
         st.session_state["current_ticket"] = ticket
 
 
-def reset_form_fields():
-    if "resolution" in st.session_state:
-        del st.session_state.resolution
-    if "ai_helpful" in st.session_state:
-        del st.session_state.ai_helpful
-    if "feedback" in st.session_state:
-        del st.session_state.feedback
-
-
 # Fetch all tickets and resolved tickets at the start of the session
 fetch_all_tickets()
 fetch_resolved_tickets()
@@ -144,6 +135,7 @@ if not st.session_state["all_tickets_df"].empty:
 
     # AI Suggestion
     def create_resolution_form():
+        """Create a resolution form. It clears on submit."""
         with st.form("resolution_form", clear_on_submit=True):
             if st.form_submit_button("Get AI Suggestion"):
                 with st.spinner("Fetching AI Suggestion..."):
