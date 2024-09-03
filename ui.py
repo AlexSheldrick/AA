@@ -196,11 +196,10 @@ if not st.session_state["all_tickets_df"].empty:
                         if response.status_code == 200:
                             st.success("Ticket resolved successfully!")
                             fetch_resolved_tickets()
-                            fetch_all_tickets()  # Refresh the all_tickets_df
-                            # Decrement the current index if it's not the first ticket
+                            fetch_all_tickets()
+
                             if st.session_state["current_index"] > 0:
                                 st.session_state["current_index"] -= 1
-                            # Fetch the new current ticket
                             fetch_ticket_by_idx(
                                 st.session_state["current_index"]
                             )
@@ -210,10 +209,8 @@ if not st.session_state["all_tickets_df"].empty:
                                 pd.DataFrame()
                             )
                             return True
-                        else:
-                            st.error(
-                                f"Failed to resolve ticket: {response.text}"
-                            )
+                        st.error(f"Failed to resolve ticket: {response.text}")
+
                     except requests.RequestException as e:
                         st.error(f"Error resolving ticket: {str(e)}")
         return False
