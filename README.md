@@ -1,3 +1,47 @@
+# IT Helpdesk Ticket Resolution System
+
+This codebase implements an IT Helpdesk Ticket Resolution System designed to assist service agents in resolving tickets efficiently. The system leverages information from previously resolved tickets and provides AI-generated suggestions to enhance the resolution process.
+
+## Main Components
+
+### 1. Data Loading
+The `DataLoader` class is responsible for loading ticket data from various file formats (CSV, XLSX, JSON) into a pandas DataFrame. It normalizes column names and sets appropriate data types.
+
+### 2. Ticket Management
+The `TicketManager` class handles ticket-related operations, including fetching, adding, and resolving tickets. It uses a Pydantic `Ticket` model for data validation.
+
+### 3. Similarity Engine
+The `SimilarityEngine` class identifies similar tickets based on text similarity using TF-IDF vectorization and cosine similarity.
+
+### 4. AI Suggestion Engine
+The `AISuggestionEngine` class integrates with LLM APIs (OpenAI or Aleph Alpha) to generate AI-enhanced suggestions based on similar tickets.
+
+### 5. API
+A FastAPI application exposes endpoints for ticket management, AI suggestions, and ticket resolution.
+
+### 6. User Interface
+A Streamlit-based user interface allows agents to interact with the ticket resolution system.
+
+## Implementation Details
+
+### 1. Data Flow
+- Ticket data is loaded from various sources using the `DataLoader`.
+- New tickets are managed by the `TicketManager`.
+- Upon the arrival of a new ticket, the `SimilarityEngine` finds similar resolved tickets.
+- The `AISuggestionEngine` generates a suggestion based on these similar tickets.
+- Agents can view and resolve tickets through the Streamlit UI or API endpoints.
+
+### 2. AI Integration
+The system supports AI-generated suggestions using either OpenAI's GPT models or Aleph Alpha's Luminous model. The choice of provider is configurable.
+
+### 3. Ticket Resolution Process
+- An agent views a new ticket.
+- The system finds similar resolved tickets.
+- An AI-generated suggestion is provided based on the similar tickets.
+- The agent resolves the ticket and provides feedback on the AI suggestion.
+
+----------------------------------------
+
 # Aleph Alpha AI Solutions Engineer Case Study
 
 Congratulations on making it to the case study round! We appreciate your time and effort so far and are really excited to see what you will come up with during this case study. During this round, we will present you with a case study to give you the opportunity to showcase your skills. It will be open-ended, and you will have the freedom to tackle the problem as you please.
