@@ -1,7 +1,4 @@
 # IT Helpdesk Ticket Resolution System
-The app is deployed [here](https://grjtzb38rvrjlw4hbpfhx3.streamlit.app/)
-
-# IT Helpdesk Ticket Resolution System
 
 This codebase implements an **IT Helpdesk Ticket Resolution System** designed to streamline the resolution of helpdesk tickets by leveraging past ticket information and AI-generated suggestions. The app is live and can be accessed [here](https://grjtzb38rvrjlw4hbpfhx3.streamlit.app/).
 
