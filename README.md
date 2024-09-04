@@ -47,7 +47,7 @@ Agents can view new tickets, assess similar past tickets, and review AI-generate
    
 2. **Deployment**: The app currently runs locally after installation. Deploying the system in a Docker container with Docker Compose to manage dependencies (e.g., database, API) would simplify deployment, especially for production environments or internal networks.
 
-3. **Concurrency**: The app doesn’t employ asynchronous functionality, which limits performance when handling multiple requests. This was likely done to simplify development but impacts scalability.
+3. **Concurrency**: The app doesn’t employ asynchronous functionality, which limits performance when handling multiple requests. This was done to simplify development but impacts scalability.
 
 4. **Testing**: There is no CI/CD pipeline or automated testing, making it harder to ensure code stability and reliability as the project evolves.
 
