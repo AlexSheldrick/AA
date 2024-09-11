@@ -1,6 +1,16 @@
 # IT Helpdesk Ticket Resolution System
 
-This codebase implements an **IT Helpdesk Ticket Resolution System** designed to streamline the resolution of helpdesk tickets by leveraging past ticket information and AI-generated suggestions. The app is live and can be accessed [here](https://grjtzb38rvrjlw4hbpfhx3.streamlit.app/).
+This codebase implements an **IT Helpdesk Ticket Resolution System** designed to streamline the resolution of helpdesk tickets by leveraging past ticket information and AI-generated suggestions. The app is currently offline but cloning this repo allows playing around with it locally.
+
+## Startup (Local)
+Start the backend:
+`uvicorn app:app --reload --host 0.0.0.0 --port 8000`
+
+And in a seperate terminal run:
+`streamlit run ui.py`
+
+Connect to the frontend UI via browser at e.g.:
+`http://localhost:8501`
 
 ## Main Components
 
